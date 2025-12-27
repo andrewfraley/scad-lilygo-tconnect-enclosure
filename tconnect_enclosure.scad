@@ -48,7 +48,7 @@ pin_height = 5;
 
 // Pin placement for RJ45 modules
 pin_from_wall = 5; // Distance from wall with opening to first pin pair
-pin_from_ridge_side = 3; // Distance from side ridges to pins
+pin_from_ridge_side = 3.5; // Distance from side ridges to pins
 pin_pair_spacing = 11.5; // Distance between first and second pin pair
 
 // Pin placement for main board
