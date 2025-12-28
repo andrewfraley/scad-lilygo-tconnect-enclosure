@@ -82,10 +82,9 @@ pin_pair_spacing = 11.5; // Distance between first and second pin pair
 board_pin_inset = 3; // Distance from board edge to pin center
 
 // RJ45 connector cutout positioning (for inverted modules in lid)
-// PCB sits on bottom of ridges at: wall_height - ridge_height
-// Connector opening is 2.5mm below inverted PCB, extends 14mm down
+// Lid bottom is at wall_height, cutout should start 2.5mm below
 // With rotate([-90,0,0]), the Z position is the TOP of the cutout
-rj45_connector_top_offset = wall_height - ridge_height - 2.5;
+rj45_connector_top_offset = wall_height - 2.5;
 
 // Calculated dimensions
 // Length needs to fit: board + terminal blocks + some extra for RJ45 row if needed
