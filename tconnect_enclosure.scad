@@ -1,4 +1,5 @@
 // LillyGo T-Connect ESP32 Enclosure
+// https://lilygo.cc/en-us/products/t-connect
 // Open shell for board placement
 
 // Board dimensions
@@ -29,6 +30,12 @@ terminal_clearance = 25;
 rj45_connector_width = 16.5; // Width of RJ45 connector cutout
 rj45_connector_height = 14; // Height of RJ45 connector cutout
 rj45_connector_bottom_offset = 2.5; // Distance from floor to bottom of connector
+
+// Button cutouts
+button_diameter = 3; // Diameter of button holes
+button_height = 3; // Height from floor to button center
+button1_from_power_side = 24; // Distance from power input edge of board to first button
+button2_from_power_side = 31; // Distance from power input edge of board to second button
 
 // RJ45 module dimensions
 rj45_module_width = 35; // Internal width for RJ45 module
@@ -175,6 +182,29 @@ module enclosure_shell() {
         ]
       )
         cube([wall_thickness + 2, rj45_connector_width, rj45_connector_height]);
+
+      // Button holes on top side wall (long edge)
+      // Button 1
+      translate(
+        [
+          wall_thickness + rj45_length + board_to_rj45_gap + board_clearance + button1_from_power_side,
+          outer_width + 1,
+          wall_thickness + button_height,
+        ]
+      )
+        rotate([90, 0, 0])
+          cylinder(d=button_diameter, h=wall_thickness + 2, $fn=20);
+
+      // Button 2
+      translate(
+        [
+          wall_thickness + rj45_length + board_to_rj45_gap + board_clearance + button2_from_power_side,
+          outer_width + 1,
+          wall_thickness + button_height,
+        ]
+      )
+        rotate([90, 0, 0])
+          cylinder(d=button_diameter, h=wall_thickness + 2, $fn=20);
     }
 
     // All RJ45 module mounts (ridges + pins)
