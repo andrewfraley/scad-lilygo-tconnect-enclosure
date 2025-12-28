@@ -3,9 +3,8 @@
 // RJ45 modules mounted inverted in lid for compact length
 
 // Visualization options
-show_lid = false; // Show/hide the lid in preview
-// render_part = "enclosure"; // "enclosure" or "lid" - controls what gets rendered for export
-render_part = "enclosure"; // "enclosure" or "lid" - controls what gets rendered for export
+show_lid = true; // Show/hide the lid in preview
+render_part = "lid"; // "enclosure" or "lid" - controls what gets rendered for export
 
 // Board dimensions
 board_width = 83;
