@@ -4,14 +4,14 @@
 
 // Visualization options
 show_lid = false; // Show/hide the lid in preview
+// render_part = "enclosure"; // "enclosure" or "lid" - controls what gets rendered for export
 render_part = "enclosure"; // "enclosure" or "lid" - controls what gets rendered for export
-// render_part = "lid"; // "enclosure" or "lid" - controls what gets rendered for export
 
 // Board dimensions
 board_width = 83;
 board_length = 94;
 board_height = 13; // Total height with components above board
-board_thickness = 1.6; // Actual PCB thickness
+board_thickness = 2; // Actual PCB thickness
 board_clearance = 1; // Clearance in length direction
 terminal_block_clearance = 12; // Clearance on each side for terminal blocks
 
@@ -32,7 +32,6 @@ pin_guide_height = wall_height - wall_thickness - pin_height - board_thickness -
 terminal_clearance = 25;
 rj45_connector_width = 16.5; // Width of RJ45 connector cutout
 rj45_connector_height = 14; // Height of RJ45 connector cutout
-rj45_connector_bottom_offset = wall_height - wall_thickness - 17; // Position near top for inverted modules (board_height + 4mm)
 
 // Button cutouts
 button_diameter = 3; // Diameter of button holes
@@ -40,12 +39,28 @@ button_height = 3; // Height from floor to button center
 button1_from_power_side = 24; // Distance from power input edge of board to first button
 button2_from_power_side = 31; // Distance from power input edge of board to second button
 
+// LED viewing holes in lid
+led_hole_diameter = 3; // Diameter of LED viewing holes
+led_first_from_power_side = 10; // Distance from power input edge of board to first LED
+led_spacing = 4; // Spacing between LED holes
+led_from_bottom_edge = 9; // Distance from bottom edge of board to LEDs
+
+// Mounting holes in bottom
+mounting_hole_diameter = 3; // Diameter of mounting holes in bottom
+mounting_hole_inset = 8; // Distance from corner to mounting hole center (increased for screw head clearance)
+
+// Board retention clips
+clip_width = 5; // Width of clip
+clip_thickness = 1.5; // Thickness of clip
+clip_overhang = 1; // How much clip extends over board edge
+clip_height = 2; // Height of clip above board surface
+
 // RJ45 module dimensions (now mounted in lid on one edge)
 rj45_module_width = 35; // Internal width for RJ45 module
 rj45_module_length = 29; // Internal length for RJ45 module
 ridge_thickness = 2; // Thickness of ridges around RJ45 modules
 ridge_height = 5; // Height of ridges above base
-rj45_module_count = 4; // Number of RJ45 modules in a row
+rj45_module_count = 3; // Number of RJ45 modules in a row
 
 // Calculated RJ45 dimensions
 rj45_single_width = rj45_module_width + 2 * ridge_thickness; // Width of single module with side ridges
@@ -65,6 +80,12 @@ pin_pair_spacing = 11.5; // Distance between first and second pin pair
 
 // Pin placement for main board
 board_pin_inset = 3; // Distance from board edge to pin center
+
+// RJ45 connector cutout positioning (for inverted modules in lid)
+// PCB sits on bottom of ridges at: wall_height - ridge_height
+// Connector opening is 2.5mm below inverted PCB, extends 14mm down
+// With rotate([-90,0,0]), the Z position is the TOP of the cutout
+rj45_connector_top_offset = wall_height - ridge_height - 2.5;
 
 // Calculated dimensions
 // Length needs to fit: board + terminal blocks + some extra for RJ45 row if needed
@@ -142,17 +163,18 @@ module enclosure_shell() {
       translate([wall_thickness, wall_thickness, wall_thickness])
         cube([inner_length, inner_width, wall_height]);
 
-      // RJ45 connector cutouts on button side (4 connectors in a row)
+      // RJ45 connector cutouts on opposite side from buttons (3 connectors in a row)
+      // Center the cutouts to match the centered RJ45 mounts in the lid
       for (i = [0:rj45_module_count - 1]) {
-        cutout_x = wall_thickness + lip_clearance + ridge_thickness + (i * (rj45_module_width + ridge_thickness)) + (rj45_module_width - rj45_connector_width) / 2;
+        cutout_x = (outer_length - rj45_row_length) / 2 + ridge_thickness + (i * (rj45_module_width + ridge_thickness)) + (rj45_module_width - rj45_connector_width) / 2;
         translate(
           [
             cutout_x,
-            outer_width + 1,
-            rj45_connector_bottom_offset,
+            -1,
+            rj45_connector_top_offset,
           ]
         )
-          rotate([90, 0, 0])
+          rotate([-90, 0, 0])
             cube([rj45_connector_width, rj45_connector_height, wall_thickness + 2]);
       }
 
@@ -178,6 +200,23 @@ module enclosure_shell() {
       )
         rotate([90, 0, 0])
           cylinder(d=button_diameter, h=wall_thickness + 2, $fn=20);
+
+      // Mounting holes in bottom (near corners for wall mounting)
+      // Bottom-left corner
+      translate([mounting_hole_inset, mounting_hole_inset, -1])
+        cylinder(d=mounting_hole_diameter, h=wall_thickness + 2, $fn=20);
+
+      // Bottom-right corner
+      translate([outer_length - mounting_hole_inset, mounting_hole_inset, -1])
+        cylinder(d=mounting_hole_diameter, h=wall_thickness + 2, $fn=20);
+
+      // Top-left corner
+      translate([mounting_hole_inset, outer_width - mounting_hole_inset, -1])
+        cylinder(d=mounting_hole_diameter, h=wall_thickness + 2, $fn=20);
+
+      // Top-right corner
+      translate([outer_length - mounting_hole_inset, outer_width - mounting_hole_inset, -1])
+        cylinder(d=mounting_hole_diameter, h=wall_thickness + 2, $fn=20);
     }
 
     // Main board mounting pins (4 corners)
@@ -220,6 +259,29 @@ module enclosure_shell() {
       ]
     )
       rounded_pin(pin_diameter, pin_height);
+
+    // Board retention clips (hold board down without lid pins)
+    // Clips at the halfway point on both long sides to avoid LEDs and buttons
+    // Clips sit on top of the board surface
+    // Bottom side - Center clip
+    translate(
+      [
+        wall_thickness + terminal_block_clearance + board_length / 2 - clip_width / 2,
+        wall_thickness + board_clearance - clip_thickness,
+        wall_thickness + board_thickness,
+      ]
+    )
+      cube([clip_width, clip_thickness + clip_overhang, clip_height]);
+
+    // Top side - Center clip
+    translate(
+      [
+        wall_thickness + terminal_block_clearance + board_length / 2 - clip_width / 2,
+        wall_thickness + board_clearance + board_width - clip_overhang,
+        wall_thickness + board_thickness,
+      ]
+    )
+      cube([clip_width, clip_thickness + clip_overhang, clip_height]);
   }
 }
 
@@ -248,13 +310,25 @@ module lid() {
           cube([inner_length - 2 * lip_clearance, inner_width - 2 * lip_clearance, lip_depth]);
       }
 
-      // No additional cutouts needed
+      // LED viewing holes (4 LEDs in a row between pin and buttons)
+      // LEDs are on the same side as the buttons (button side)
+      for (i = [0:3]) {
+        translate(
+          [
+            wall_thickness + terminal_block_clearance + led_first_from_power_side + (i * led_spacing),
+            wall_thickness + board_clearance + board_width - led_from_bottom_edge,
+            -lip_depth - 1,
+          ]
+        )
+          cylinder(d=led_hole_diameter, h=lid_thickness + lip_depth + 2, $fn=20);
+      }
     }
 
-    // Row of 4 inverted RJ45 module mounts on button side (hanging down from lid)
+    // Row of 3 inverted RJ45 module mounts on opposite side from buttons (hanging down from lid)
+    // Center the row horizontally within the lid
     rj45_row_inverted(
-      wall_thickness + lip_clearance,
-      outer_width - wall_thickness - lip_clearance - rj45_module_length
+      (outer_length - rj45_row_length) / 2,
+      wall_thickness + lip_clearance
     );
   }
 }
@@ -267,9 +341,11 @@ if (render_part == "enclosure") {
 }
 
 // Preview visualizations (only visible in preview mode, not render)
-// Show the boards for context
-%board_placeholder();
-%rj45_modules_placeholder();
+// Show the boards for context (only when rendering enclosure)
+if (render_part == "enclosure") {
+  %board_placeholder();
+  %rj45_modules_placeholder();
+}
 
 // Show the lid above enclosure if enabled
 if (show_lid && render_part == "enclosure") {
