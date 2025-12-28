@@ -42,6 +42,11 @@ led_first_from_power_side = 10; // Distance from power input edge of board to fi
 led_spacing = 4; // Spacing between LED holes
 led_from_bottom_edge = 9; // Distance from bottom edge of board to LEDs
 
+// Additional hole on short edge
+side_hole_diameter = 7; // Diameter of hole on short edge (sized for Cat6 cable ~6-7mm)
+side_hole_from_led_edge = 8; // Distance from LED edge to hole center
+side_hole_height = 8; // Height from floor (just above board)
+
 // Mounting holes in bottom
 mounting_hole_diameter = 3; // Diameter of mounting holes in bottom
 mounting_hole_inset = 8; // Distance from corner to mounting hole center (increased for screw head clearance)
@@ -213,6 +218,17 @@ module enclosure_shell() {
       // Top-right corner
       translate([outer_length - mounting_hole_inset, outer_width - mounting_hole_inset, -1])
         cylinder(d=mounting_hole_diameter, h=wall_thickness + 2, $fn=20);
+
+      // Hole on short edge (power input side), near corner on LED side
+      translate(
+        [
+          -1,
+          wall_thickness + board_clearance + side_hole_from_led_edge,
+          side_hole_height,
+        ]
+      )
+        rotate([0, 90, 0])
+          cylinder(d=side_hole_diameter, h=wall_thickness + 2, $fn=20);
     }
 
     // Main board mounting pins (4 corners)
