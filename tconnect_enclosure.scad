@@ -2,6 +2,10 @@
 // https://lilygo.cc/en-us/products/t-connect
 // Open shell for board placement
 
+// Visualization options
+show_lid = false; // Show/hide the lid in preview
+render_part = "enclosure"; // "enclosure" or "lid" - controls what gets rendered for export
+
 // Board dimensions
 board_width = 83;
 board_length = 94;
@@ -11,7 +15,7 @@ board_clearance = 1;
 
 // Enclosure parameters
 wall_thickness = 3;
-wall_height = 20.5;
+wall_height = 22.5;
 corner_fillet = 2; // Fillet radius for vertical edges
 
 // Lid parameters
@@ -20,10 +24,7 @@ lip_depth = 2; // How far the lip extends down into the enclosure
 lip_clearance = 0.2; // Clearance between lip and enclosure walls
 pin_guide_inner_diameter = 2.7; // Inner diameter to fit over pins
 pin_guide_outer_diameter = 5; // Outer diameter of pin guides
-pin_guide_height = 6; // Height of pin guides extending down from lid
-
-// Visualization options
-show_lid = false; // Show/hide the lid in preview
+pin_guide_height = 13; // Height of pin guides - extends to board top (wall_height - pin_height - wall_thickness - board_thickness)
 
 // Clearance dimensions
 terminal_clearance = 25;
@@ -40,7 +41,7 @@ button2_from_power_side = 31; // Distance from power input edge of board to seco
 // RJ45 module dimensions
 rj45_module_width = 35; // Internal width for RJ45 module
 rj45_module_length = 29; // Internal length for RJ45 module
-ridge_thickness = 3; // Thickness of ridges around RJ45 modules
+ridge_thickness = 2; // Thickness of ridges around RJ45 modules
 ridge_height = 5; // Height of ridges above base
 
 // Calculated RJ45 dimensions (including ridges)
@@ -393,15 +394,20 @@ module lid() {
   }
 }
 
-// Render the enclosure and board
-enclosure_shell();
+// Render only the selected part (for export)
+if (render_part == "enclosure") {
+  enclosure_shell();
+} else if (render_part == "lid") {
+  lid();
+}
 
-// Show the boards for visualization (comment out for final export)
+// Preview visualizations (only visible in preview mode, not render)
+// Show the boards for context
 %board_placeholder();
 %rj45_modules_placeholder();
 
-// Show the lid (positioned above the enclosure for visualization)
-if (show_lid) {
+// Show the lid above enclosure if enabled
+if (show_lid && render_part == "enclosure") {
   translate([0, 0, wall_height + 5])
     %lid();
 }
