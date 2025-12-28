@@ -12,7 +12,8 @@ board_width = 83;
 board_length = 94;
 board_height = 13; // Total height with components above board
 board_thickness = 1.6; // Actual PCB thickness
-board_clearance = 1;
+board_clearance = 1; // Clearance in length direction
+terminal_block_clearance = 12; // Clearance on each side for terminal blocks
 
 // Enclosure parameters
 wall_thickness = 3;
@@ -39,15 +40,18 @@ button_height = 3; // Height from floor to button center
 button1_from_power_side = 24; // Distance from power input edge of board to first button
 button2_from_power_side = 31; // Distance from power input edge of board to second button
 
-// RJ45 module dimensions (now mounted in lid)
+// RJ45 module dimensions (now mounted in lid on one edge)
 rj45_module_width = 35; // Internal width for RJ45 module
 rj45_module_length = 29; // Internal length for RJ45 module
 ridge_thickness = 2; // Thickness of ridges around RJ45 modules
 ridge_height = 5; // Height of ridges above base
+rj45_module_count = 4; // Number of RJ45 modules in a row
 
-// Calculated RJ45 dimensions (including ridges)
-rj45_width = rj45_module_width + 2 * ridge_thickness; // Total width with ridges
-rj45_length = rj45_module_length + ridge_thickness; // Total length with one ridge
+// Calculated RJ45 dimensions
+rj45_single_width = rj45_module_width + 2 * ridge_thickness; // Width of single module with side ridges
+// For a row of modules: width = (modules * module_width) + ((modules + 1) * ridge_thickness)
+// This accounts for one ridge between each pair, plus one on each end
+rj45_row_length = (rj45_module_count * rj45_module_width) + ( (rj45_module_count + 1) * ridge_thickness);
 
 // Mounting holes
 board_holes = 3;
@@ -62,9 +66,12 @@ pin_pair_spacing = 11.5; // Distance between first and second pin pair
 // Pin placement for main board
 board_pin_inset = 3; // Distance from board edge to pin center
 
-// Calculated dimensions - COMPACT VERSION (no RJ45 areas at ends)
+// Calculated dimensions
+// Length needs to fit: board + terminal blocks + some extra for RJ45 row if needed
+min_length_for_board = board_length + 2 * terminal_block_clearance;
+min_length_for_rj45 = rj45_row_length + 2 * wall_thickness + 2 * lip_clearance;
+inner_length = max(min_length_for_board, rj45_row_length + 4); // Use larger + some clearance
 inner_width = board_width + 2 * board_clearance;
-inner_length = board_length + 2 * board_clearance; // Just board + clearances
 outer_width = inner_width + 2 * wall_thickness;
 outer_length = inner_length + 2 * wall_thickness;
 
@@ -75,47 +82,36 @@ module rounded_pin(diameter, height) {
     sphere(d=diameter, $fn=20);
 }
 
-// RJ45 module mount for LID (inverted - ridges and pins point DOWN)
-// base_x, base_y: position relative to lid
-// wall_side: "terminal" for terminal block side, "power" for power input side
-module rj45_module_mount_inverted(base_x, base_y, wall_side) {
-  if (wall_side == "terminal") {
-    // Terminal block side modules (left/right positions)
-    // Three ridges pointing DOWN
-    translate([base_x, base_y, -ridge_height])
-      cube([ridge_thickness, rj45_width, ridge_height]);
-    translate([base_x, base_y + rj45_width - ridge_thickness, -ridge_height])
-      cube([rj45_length, ridge_thickness, ridge_height]);
-    translate([base_x, base_y, -ridge_height])
-      cube([rj45_length, ridge_thickness, ridge_height]);
+// Module for a row of 4 RJ45 modules with shared ridges (inverted for lid)
+// base_x, base_y: starting position (left edge of first module)
+// Ridges and pins point DOWN from lid
+module rj45_row_inverted(base_x, base_y) {
+  // Create ridges - one at each end, one between each pair
+  for (i = [0:rj45_module_count]) {
+    // Vertical ridges perpendicular to the wall
+    x_pos = base_x + (i * (rj45_module_width + ridge_thickness));
+    translate([x_pos, base_y, -ridge_height])
+      cube([ridge_thickness, rj45_module_length, ridge_height]);
+  }
 
-    // Four mounting pins pointing DOWN (no sphere on bottom)
-    translate([base_x + rj45_length - pin_from_wall, base_y + ridge_thickness + pin_from_ridge_side, -pin_height])
-      cylinder(d=pin_diameter, h=pin_height, $fn=20);
-    translate([base_x + rj45_length - pin_from_wall, base_y + rj45_width - ridge_thickness - pin_from_ridge_side, -pin_height])
-      cylinder(d=pin_diameter, h=pin_height, $fn=20);
-    translate([base_x + rj45_length - pin_from_wall - pin_pair_spacing, base_y + ridge_thickness + pin_from_ridge_side, -pin_height])
-      cylinder(d=pin_diameter, h=pin_height, $fn=20);
-    translate([base_x + rj45_length - pin_from_wall - pin_pair_spacing, base_y + rj45_width - ridge_thickness - pin_from_ridge_side, -pin_height])
-      cylinder(d=pin_diameter, h=pin_height, $fn=20);
-  } else {
-    // Power input side (center position, wall on -X side)
-    // Three ridges pointing DOWN
-    translate([base_x + rj45_length - ridge_thickness, base_y, -ridge_height])
-      cube([ridge_thickness, rj45_width, ridge_height]);
-    translate([base_x, base_y + rj45_width - ridge_thickness, -ridge_height])
-      cube([rj45_length, ridge_thickness, ridge_height]);
-    translate([base_x, base_y, -ridge_height])
-      cube([rj45_length, ridge_thickness, ridge_height]);
+  // Create two horizontal ridges parallel to the wall (front and back of modules)
+  translate([base_x, base_y, -ridge_height])
+    cube([rj45_row_length, ridge_thickness, ridge_height]);
+  translate([base_x, base_y + rj45_module_length - ridge_thickness, -ridge_height])
+    cube([rj45_row_length, ridge_thickness, ridge_height]);
 
-    // Four mounting pins pointing DOWN
-    translate([base_x + pin_from_wall, base_y + ridge_thickness + pin_from_ridge_side, -pin_height])
+  // Create pins for each module
+  for (i = [0:rj45_module_count - 1]) {
+    module_x = base_x + ridge_thickness + (i * (rj45_module_width + ridge_thickness));
+
+    // Four pins per module
+    translate([module_x + pin_from_ridge_side, base_y + pin_from_wall, -pin_height])
       cylinder(d=pin_diameter, h=pin_height, $fn=20);
-    translate([base_x + pin_from_wall, base_y + rj45_width - ridge_thickness - pin_from_ridge_side, -pin_height])
+    translate([module_x + rj45_module_width - pin_from_ridge_side, base_y + pin_from_wall, -pin_height])
       cylinder(d=pin_diameter, h=pin_height, $fn=20);
-    translate([base_x + pin_from_wall + pin_pair_spacing, base_y + ridge_thickness + pin_from_ridge_side, -pin_height])
+    translate([module_x + pin_from_ridge_side, base_y + pin_from_wall + pin_pair_spacing, -pin_height])
       cylinder(d=pin_diameter, h=pin_height, $fn=20);
-    translate([base_x + pin_from_wall + pin_pair_spacing, base_y + rj45_width - ridge_thickness - pin_from_ridge_side, -pin_height])
+    translate([module_x + rj45_module_width - pin_from_ridge_side, base_y + pin_from_wall + pin_pair_spacing, -pin_height])
       cylinder(d=pin_diameter, h=pin_height, $fn=20);
   }
 }
@@ -146,53 +142,25 @@ module enclosure_shell() {
       translate([wall_thickness, wall_thickness, wall_thickness])
         cube([inner_length, inner_width, wall_height]);
 
-      // RJ45 connector cutouts on terminal block side (positioned high for inverted modules)
-      // Left RJ45 connector cutout
-      translate(
-        [
-          outer_length - wall_thickness - 1,
-          wall_thickness + (rj45_width - rj45_connector_width) / 2,
-          rj45_connector_bottom_offset,
-        ]
-      )
-        cube([wall_thickness + 2, rj45_connector_width, rj45_connector_height]);
+      // RJ45 connector cutouts on button side (4 connectors in a row)
+      for (i = [0:rj45_module_count - 1]) {
+        cutout_x = wall_thickness + lip_clearance + ridge_thickness + (i * (rj45_module_width + ridge_thickness)) + (rj45_module_width - rj45_connector_width) / 2;
+        translate(
+          [
+            cutout_x,
+            outer_width + 1,
+            rj45_connector_bottom_offset,
+          ]
+        )
+          rotate([90, 0, 0])
+            cube([rj45_connector_width, rj45_connector_height, wall_thickness + 2]);
+      }
 
-      // Right RJ45 connector cutout
-      translate(
-        [
-          outer_length - wall_thickness - 1,
-          outer_width - wall_thickness - rj45_width + (rj45_width - rj45_connector_width) / 2,
-          rj45_connector_bottom_offset,
-        ]
-      )
-        cube([wall_thickness + 2, rj45_connector_width, rj45_connector_height]);
-
-      // Power input side - RJ45 connector cutouts (left and right, positioned high)
-      // Left cutout
-      translate(
-        [
-          -1,
-          wall_thickness + (rj45_width - rj45_connector_width) / 2,
-          rj45_connector_bottom_offset,
-        ]
-      )
-        cube([wall_thickness + 2, rj45_connector_width, rj45_connector_height]);
-
-      // Right cutout
-      translate(
-        [
-          -1,
-          outer_width - wall_thickness - rj45_width + (rj45_width - rj45_connector_width) / 2,
-          rj45_connector_bottom_offset,
-        ]
-      )
-        cube([wall_thickness + 2, rj45_connector_width, rj45_connector_height]);
-
-      // Button holes on top side wall (long edge)
+      // Button holes on button side wall (long edge) - positioned to avoid RJ45 cutouts
       // Button 1
       translate(
         [
-          wall_thickness + board_clearance + button1_from_power_side,
+          wall_thickness + terminal_block_clearance + button1_from_power_side,
           outer_width + 1,
           wall_thickness + button_height,
         ]
@@ -203,7 +171,7 @@ module enclosure_shell() {
       // Button 2
       translate(
         [
-          wall_thickness + board_clearance + button2_from_power_side,
+          wall_thickness + terminal_block_clearance + button2_from_power_side,
           outer_width + 1,
           wall_thickness + button_height,
         ]
@@ -216,7 +184,7 @@ module enclosure_shell() {
     // Bottom-left corner
     translate(
       [
-        wall_thickness + board_clearance + board_pin_inset,
+        wall_thickness + terminal_block_clearance + board_pin_inset,
         wall_thickness + board_clearance + board_pin_inset,
         wall_thickness,
       ]
@@ -226,7 +194,7 @@ module enclosure_shell() {
     // Bottom-right corner
     translate(
       [
-        wall_thickness + board_clearance + board_length - board_pin_inset,
+        wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
         wall_thickness + board_clearance + board_pin_inset,
         wall_thickness,
       ]
@@ -236,7 +204,7 @@ module enclosure_shell() {
     // Top-left corner
     translate(
       [
-        wall_thickness + board_clearance + board_pin_inset,
+        wall_thickness + terminal_block_clearance + board_pin_inset,
         wall_thickness + board_clearance + board_width - board_pin_inset,
         wall_thickness,
       ]
@@ -246,7 +214,7 @@ module enclosure_shell() {
     // Top-right corner
     translate(
       [
-        wall_thickness + board_clearance + board_length - board_pin_inset,
+        wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
         wall_thickness + board_clearance + board_width - board_pin_inset,
         wall_thickness,
       ]
@@ -258,7 +226,7 @@ module enclosure_shell() {
 // Board placeholder module
 module board_placeholder() {
   color("green", 0.7)
-    translate([wall_thickness + board_clearance, wall_thickness + board_clearance, wall_thickness])
+    translate([wall_thickness + terminal_block_clearance, wall_thickness + board_clearance, wall_thickness])
       cube([board_length, board_width, board_thickness]);
 }
 
@@ -283,33 +251,10 @@ module lid() {
       // No additional cutouts needed
     }
 
-    // Inverted RJ45 module mounts (hanging down from lid)
-    // Terminal block side - Left
-    rj45_module_mount_inverted(
-      outer_length - wall_thickness - lip_clearance - rj45_length,
+    // Row of 4 inverted RJ45 module mounts on button side (hanging down from lid)
+    rj45_row_inverted(
       wall_thickness + lip_clearance,
-      "terminal"
-    );
-
-    // Terminal block side - Right
-    rj45_module_mount_inverted(
-      outer_length - wall_thickness - lip_clearance - rj45_length,
-      outer_width - wall_thickness - lip_clearance - rj45_width,
-      "terminal"
-    );
-
-    // Power input side - Left
-    rj45_module_mount_inverted(
-      wall_thickness + lip_clearance,
-      wall_thickness + lip_clearance,
-      "power"
-    );
-
-    // Power input side - Right
-    rj45_module_mount_inverted(
-      wall_thickness + lip_clearance,
-      outer_width - wall_thickness - lip_clearance - rj45_width,
-      "power"
+      outer_width - wall_thickness - lip_clearance - rj45_module_length
     );
   }
 }
