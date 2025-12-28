@@ -4,7 +4,8 @@
 
 // Visualization options
 show_lid = true; // Show/hide the lid in preview
-render_part = "lid"; // "enclosure" or "lid" - controls what gets rendered for export
+show_light_pipes = true; // Show/hide light pipes in preview
+render_part = "light_pipes"; // "enclosure", "lid", or "light_pipes" - controls what gets rendered for export
 
 // Board dimensions
 board_width = 83;
@@ -36,10 +37,16 @@ button1_from_power_side = 24; // Distance from power input edge of board to firs
 button2_from_power_side = 31; // Distance from power input edge of board to second button
 
 // LED viewing holes in lid
-led_hole_diameter = 3; // Diameter of LED viewing holes
+led_hole_size = 3; // Size of square LED viewing holes
 led_first_from_power_side = 10; // Distance from power input edge of board to first LED
 led_spacing = 4; // Spacing between LED holes
 led_from_bottom_edge = 9; // Distance from bottom edge of board to LEDs
+
+// Light pipe parameters
+light_pipe_length = 37; // Length from lid bottom to board (wall_height - wall_thickness - board_thickness + lip_depth)
+light_pipe_flange_size = 5; // Size of flange that sits on lid surface
+light_pipe_flange_thickness = 1; // Thickness of flange
+light_pipe_taper = 0.1; // Slight taper for easier insertion (mm per side)
 
 // Additional hole on short edge
 side_hole_diameter = 7; // Diameter of hole on short edge (sized for Cat6 cable ~6-7mm)
@@ -101,6 +108,31 @@ module rounded_pin(diameter, height) {
   cylinder(d=diameter, h=height, $fn=20);
   translate([0, 0, height])
     sphere(d=diameter, $fn=20);
+}
+
+// Module for LED light pipe with flange
+// Creates a solid square tube that guides light from LED to lid surface
+// Flange sits on top of lid, pipe extends down through hole to board level
+// Print in clear/translucent filament for light transmission
+// Flange is flush with one side of shaft (shaft centered on that edge) for printing flat without supports
+module light_pipe() {
+  union() {
+    // Flange that sits on lid surface - shaft is centered on the flush edge
+    translate([-light_pipe_flange_size / 2, -(led_hole_size - 0.2) / 2, 0])
+      cube([light_pipe_flange_size, light_pipe_flange_size, light_pipe_flange_thickness]);
+
+    // Main light pipe body (solid, tapered for easier insertion)
+    translate([0, 0, light_pipe_flange_thickness]) {
+      hull() {
+        // Top (fits through hole with 0.2mm clearance)
+        translate([-(led_hole_size - 0.2) / 2, -(led_hole_size - 0.2) / 2, 0])
+          cube([led_hole_size - 0.2, led_hole_size - 0.2, 0.1]);
+        // Bottom (slightly narrower due to taper)
+        translate([-(led_hole_size - 0.2 - light_pipe_taper * 2) / 2, -(led_hole_size - 0.2 - light_pipe_taper * 2) / 2, light_pipe_length])
+          cube([led_hole_size - 0.2 - light_pipe_taper * 2, led_hole_size - 0.2 - light_pipe_taper * 2, 0.1]);
+      }
+    }
+  }
 }
 
 // Module for a row of 4 RJ45 modules with shared ridges (inverted for lid)
@@ -321,17 +353,17 @@ module lid() {
           cube([inner_length - 2 * lip_clearance, inner_width - 2 * lip_clearance, lip_depth]);
       }
 
-      // LED viewing holes (4 LEDs in a row between pin and buttons)
+      // LED viewing holes (4 LEDs in a row between pin and buttons) - SQUARE for light pipes
       // LEDs are on the same side as the buttons (button side)
       for (i = [0:3]) {
         translate(
           [
-            wall_thickness + terminal_block_clearance + led_first_from_power_side + (i * led_spacing),
-            wall_thickness + board_clearance + board_width - led_from_bottom_edge,
+            wall_thickness + terminal_block_clearance + led_first_from_power_side + (i * led_spacing) - led_hole_size / 2,
+            wall_thickness + board_clearance + board_width - led_from_bottom_edge - led_hole_size / 2,
             -lip_depth - 1,
           ]
         )
-          cylinder(d=led_hole_diameter, h=lid_thickness + lip_depth + 2, $fn=20);
+          cube([led_hole_size, led_hole_size, lid_thickness + lip_depth + 2]);
       }
     }
 
@@ -344,11 +376,31 @@ module lid() {
   }
 }
 
+// Module to position all 4 light pipes at correct LED positions
+module light_pipes_assembly() {
+  for (i = [0:3]) {
+    translate(
+      [
+        wall_thickness + terminal_block_clearance + led_first_from_power_side + (i * led_spacing),
+        wall_thickness + board_clearance + board_width - led_from_bottom_edge,
+        wall_height,
+      ]
+    )
+      light_pipe();
+  }
+}
+
 // Render only the selected part (for export)
 if (render_part == "enclosure") {
   enclosure_shell();
 } else if (render_part == "lid") {
   lid();
+} else if (render_part == "light_pipes") {
+  // Render all 4 light pipes in a row for printing
+  for (i = [0:3]) {
+    translate([i * (light_pipe_flange_size + 2), 0, 0])
+      light_pipe();
+  }
 }
 
 // Preview visualizations (only visible in preview mode, not render)
@@ -362,4 +414,10 @@ if (render_part == "enclosure") {
 if (show_lid && render_part == "enclosure") {
   translate([0, 0, wall_height + 5])
     %lid();
+}
+
+// Show light pipes in position if enabled (only when rendering enclosure or lid)
+if (show_light_pipes && (render_part == "enclosure" || render_part == "lid")) {
+  color("white", 0.5)
+    %light_pipes_assembly();
 }
