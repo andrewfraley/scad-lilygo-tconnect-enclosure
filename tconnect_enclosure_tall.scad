@@ -24,9 +24,6 @@ corner_fillet = 2; // Fillet radius for vertical edges
 lid_thickness = 3; // Thickness of lid top
 lip_depth = 2; // How far the lip extends down into the enclosure
 lip_clearance = 0.2; // Clearance between lip and enclosure walls
-pin_guide_inner_diameter = 2.7; // Inner diameter to fit over pins
-pin_guide_outer_diameter = 5; // Outer diameter of pin guides
-pin_guide_height = wall_height - wall_thickness - pin_height - board_thickness - 2; // Extends to just above board
 
 // Clearance dimensions
 terminal_clearance = 25;
