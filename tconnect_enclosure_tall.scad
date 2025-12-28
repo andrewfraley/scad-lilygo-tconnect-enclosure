@@ -3,8 +3,9 @@
 // RJ45 modules mounted inverted in lid for compact length
 
 // Visualization options
-show_lid = true; // Show/hide the lid in preview
-render_part = "lid"; // "enclosure" or "lid" - controls what gets rendered for export
+show_lid = false; // Show/hide the lid in preview
+render_part = "enclosure"; // "enclosure" or "lid" - controls what gets rendered for export
+// render_part = "lid"; // "enclosure" or "lid" - controls what gets rendered for export
 
 // Board dimensions
 board_width = 83;
@@ -166,11 +167,22 @@ module enclosure_shell() {
       )
         cube([wall_thickness + 2, rj45_connector_width, rj45_connector_height]);
 
-      // Power input side - centered RJ45 connector cutout (positioned high)
+      // Power input side - RJ45 connector cutouts (left and right, positioned high)
+      // Left cutout
       translate(
         [
           -1,
-          (outer_width - rj45_connector_width) / 2,
+          wall_thickness + (rj45_width - rj45_connector_width) / 2,
+          rj45_connector_bottom_offset,
+        ]
+      )
+        cube([wall_thickness + 2, rj45_connector_width, rj45_connector_height]);
+
+      // Right cutout
+      translate(
+        [
+          -1,
+          outer_width - wall_thickness - rj45_width + (rj45_width - rj45_connector_width) / 2,
           rj45_connector_bottom_offset,
         ]
       )
@@ -266,110 +278,37 @@ module lid() {
         // Lip that fits inside the enclosure
         translate([wall_thickness + lip_clearance, wall_thickness + lip_clearance, -lip_depth])
           cube([inner_length - 2 * lip_clearance, inner_width - 2 * lip_clearance, lip_depth]);
-
-        // Pin guides (hollow cylinders) at main board pin locations
-        // Bottom-left corner
-        translate(
-          [
-            wall_thickness + board_clearance + board_pin_inset,
-            wall_thickness + board_clearance + board_pin_inset,
-            -pin_guide_height,
-          ]
-        )
-          cylinder(d=pin_guide_outer_diameter, h=pin_guide_height, $fn=20);
-
-        // Bottom-right corner
-        translate(
-          [
-            wall_thickness + board_clearance + board_length - board_pin_inset,
-            wall_thickness + board_clearance + board_pin_inset,
-            -pin_guide_height,
-          ]
-        )
-          cylinder(d=pin_guide_outer_diameter, h=pin_guide_height, $fn=20);
-
-        // Top-left corner
-        translate(
-          [
-            wall_thickness + board_clearance + board_pin_inset,
-            wall_thickness + board_clearance + board_width - board_pin_inset,
-            -pin_guide_height,
-          ]
-        )
-          cylinder(d=pin_guide_outer_diameter, h=pin_guide_height, $fn=20);
-
-        // Top-right corner
-        translate(
-          [
-            wall_thickness + board_clearance + board_length - board_pin_inset,
-            wall_thickness + board_clearance + board_width - board_pin_inset,
-            -pin_guide_height,
-          ]
-        )
-          cylinder(d=pin_guide_outer_diameter, h=pin_guide_height, $fn=20);
       }
 
-      // Hollow out the pin guides
-      // Bottom-left corner
-      translate(
-        [
-          wall_thickness + board_clearance + board_pin_inset,
-          wall_thickness + board_clearance + board_pin_inset,
-          -pin_guide_height - 1,
-        ]
-      )
-        cylinder(d=pin_guide_inner_diameter, h=pin_guide_height + 2, $fn=20);
-
-      // Bottom-right corner
-      translate(
-        [
-          wall_thickness + board_clearance + board_length - board_pin_inset,
-          wall_thickness + board_clearance + board_pin_inset,
-          -pin_guide_height - 1,
-        ]
-      )
-        cylinder(d=pin_guide_inner_diameter, h=pin_guide_height + 2, $fn=20);
-
-      // Top-left corner
-      translate(
-        [
-          wall_thickness + board_clearance + board_pin_inset,
-          wall_thickness + board_clearance + board_width - board_pin_inset,
-          -pin_guide_height - 1,
-        ]
-      )
-        cylinder(d=pin_guide_inner_diameter, h=pin_guide_height + 2, $fn=20);
-
-      // Top-right corner
-      translate(
-        [
-          wall_thickness + board_clearance + board_length - board_pin_inset,
-          wall_thickness + board_clearance + board_width - board_pin_inset,
-          -pin_guide_height - 1,
-        ]
-      )
-        cylinder(d=pin_guide_inner_diameter, h=pin_guide_height + 2, $fn=20);
+      // No additional cutouts needed
     }
 
     // Inverted RJ45 module mounts (hanging down from lid)
     // Terminal block side - Left
     rj45_module_mount_inverted(
-      outer_length - wall_thickness - rj45_length,
-      wall_thickness,
+      outer_length - wall_thickness - lip_clearance - rj45_length,
+      wall_thickness + lip_clearance,
       "terminal"
     );
 
     // Terminal block side - Right
     rj45_module_mount_inverted(
-      outer_length - wall_thickness - rj45_length,
-      outer_width - wall_thickness - rj45_width,
+      outer_length - wall_thickness - lip_clearance - rj45_length,
+      outer_width - wall_thickness - lip_clearance - rj45_width,
       "terminal"
     );
 
-    // Power input side - Center
+    // Power input side - Left
     rj45_module_mount_inverted(
-      wall_thickness,
-      (outer_width - rj45_width) / 2,
+      wall_thickness + lip_clearance,
+      wall_thickness + lip_clearance,
+      "power"
+    );
+
+    // Power input side - Right
+    rj45_module_mount_inverted(
+      wall_thickness + lip_clearance,
+      outer_width - wall_thickness - lip_clearance - rj45_width,
       "power"
     );
   }
