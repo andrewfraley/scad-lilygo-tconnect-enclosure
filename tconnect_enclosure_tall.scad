@@ -65,7 +65,7 @@ pin_pair_spacing = 11.5; // Distance between pin pairs
 
 /* [Button Holes] */
 button_diameter = 3;
-button_height = mount_height + 2.5; // Height from floor
+button_height = mount_height + 1.5; // Height from floor
 button1_from_power_side = 24; // Button 1 position
 button2_from_power_side = 31; // Button 2 position
 
