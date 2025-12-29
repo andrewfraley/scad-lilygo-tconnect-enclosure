@@ -86,10 +86,11 @@ light_pipe_flange_size = 5; // Flange size on lid
 light_pipe_flange_thickness = 1; // Flange thickness
 light_pipe_taper = 0.1; // Taper for insertion (mm/side)
 
-/* [Cable Entry Hole] */
-side_hole_diameter = 7; // Diameter (for Cat6)
-side_hole_from_led_edge = 8; // Position from edge
-side_hole_height = 8; // Height from floor
+/* [Power Cable Entry Hole] */
+enable_power_hole = true; // [true,false] Enable/disable power input hole
+power_hole_diameter = 7; // Diameter (for Cat6)
+power_hole_from_led_edge = 8; // Position from edge
+power_hole_height = 8; // Height from floor
 
 /* [Wall Mounting Holes] */
 mounting_hole_diameter = 5;
@@ -252,16 +253,18 @@ module enclosure_shell() {
       translate([outer_length - mounting_hole_inset, outer_width - mounting_hole_inset, -1])
         cylinder(d=mounting_hole_diameter, h=wall_thickness + 2, $fn=20);
 
-      // Hole on short edge (power input side), near corner on LED side
-      translate(
-        [
-          -1,
-          wall_thickness + board_clearance + side_hole_from_led_edge,
-          side_hole_height,
-        ]
-      )
-        rotate([0, 90, 0])
-          cylinder(d=side_hole_diameter, h=wall_thickness + 2, $fn=20);
+      // Hole on short edge (power input side), near corner on LED side (optional)
+      if (enable_power_hole) {
+        translate(
+          [
+            -1,
+            wall_thickness + board_clearance + power_hole_from_led_edge,
+            power_hole_height,
+          ]
+        )
+          rotate([0, 90, 0])
+            cylinder(d=power_hole_diameter, h=wall_thickness + 2, $fn=20);
+      }
     }
 
     // Main board mounting (4 corners) - standoffs always present
