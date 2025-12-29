@@ -32,7 +32,7 @@ lip_clearance = 0.2; // Clearance between lip and walls
 
 /* [Snap Tabs] */
 snap_tab_width = 15; // Width of each snap tab
-snap_tab_depth = 0.6; // How far tab extends inward (creates interference)
+snap_tab_depth = 0.7; // How far tab extends inward (creates interference)
 snap_tab_height = 2; // Height of tab at bottom of lip
 
 /* [Board Mounting] */
@@ -348,37 +348,37 @@ module board_placeholder() {
       cube([board_length, board_width, 1.5]);
 }
 
-// Module for a single light pipe
+// Module for a single light pipe (tapered to wedge into rectangular slot)
 module light_pipe() {
-  // Shaft dimensions
-  top_size = led_hole_size + light_pipe_taper;
-  bottom_size = led_hole_size - 0.2;
+  // Shaft dimensions - tapered for wedge fit
+  top_width = led_hole_size + 0.3; // Slightly wider than slot for wedge fit
+  top_depth = led_hole_size + 0.2; // Matches 2mm hole height + small wedge fit
+  bottom_size = led_hole_size - 0.4; // Narrower at bottom to fit over LED
 
   union() {
     // Flange that sits on lid surface - extends beyond shaft on 3 sides only (one edge flush)
-    // Offset so one edge is flush with shaft for printability (aligned with bottom_size)
+    // Offset so one edge is flush with shaft for printability
     flange_offset = (light_pipe_flange_size - bottom_size) / 2;
     translate([0, flange_offset, -light_pipe_flange_thickness])
       cube([light_pipe_flange_size, light_pipe_flange_size, light_pipe_flange_thickness], center=true);
 
-    // Tapered shaft - flat on flush side (-Y), tapered on other 3 sides
-
+    // Tapered shaft - flat on flush side (-Y), tapered on other 3 sides for wedge fit
     hull() {
-      // Top profile (at lid) - polygon with one flat edge
+      // Top profile (at lid) - polygon with one flat edge, tapered for wedge fit
       translate([0, 0, -light_pipe_flange_thickness])
         linear_extrude(height=0.1)
           polygon(
             [
               // Flush edge (stays vertical, no taper on -Y side)
-              [-top_size / 2, -bottom_size / 2],
-              [top_size / 2, -bottom_size / 2],
-              // Tapered edges
-              [top_size / 2, top_size / 2],
-              [-top_size / 2, top_size / 2],
+              [-top_width / 2, -bottom_size / 2],
+              [top_width / 2, -bottom_size / 2],
+              // Tapered edges (wider at top to wedge into slot)
+              [top_width / 2, top_depth / 2],
+              [-top_width / 2, top_depth / 2],
             ]
           );
 
-      // Bottom profile (at board) - square
+      // Bottom profile (at board) - square, narrower to fit over LED
       translate([0, 0, -light_pipe_length])
         linear_extrude(height=0.1)
           square([bottom_size, bottom_size], center=true);
@@ -392,7 +392,7 @@ module light_pipes() {
     translate(
       [
         wall_thickness + terminal_block_clearance + led_first_from_power_side + (i * led_spacing) + led_hole_size / 2,
-        wall_thickness + board_clearance + board_width - led_from_bottom_edge + led_hole_size / 2,
+        wall_thickness + board_clearance + board_width - led_from_bottom_edge,
         wall_height + lid_thickness + light_pipe_flange_thickness,
       ]
     )
@@ -413,18 +413,16 @@ module lid() {
           cube([inner_length - 2 * lip_clearance, inner_width - 2 * lip_clearance, lip_depth]);
       }
 
-      // LED viewing holes (4 LEDs in a row between pin and buttons)
+      // Single rectangular LED viewing hole for all 4 light pipes
       // LEDs are on the same side as the buttons (button side)
-      for (i = [0:3]) {
-        translate(
-          [
-            wall_thickness + terminal_block_clearance + led_first_from_power_side + (i * led_spacing),
-            wall_thickness + board_clearance + board_width - led_from_bottom_edge,
-            -lip_depth - 1,
-          ]
-        )
-          cube([led_hole_size, led_hole_size, lid_thickness + lip_depth + 2]);
-      }
+      translate(
+        [
+          wall_thickness + terminal_block_clearance + led_first_from_power_side,
+          wall_thickness + board_clearance + board_width - led_from_bottom_edge - led_hole_size / 2,
+          -lip_depth - 1,
+        ]
+      )
+        cube([led_hole_size + (3 * led_spacing), led_hole_size, lid_thickness + lip_depth + 2]);
     }
 
     // Row of 3 inverted RJ45 module mounts on opposite side from buttons (hanging down from lid)
