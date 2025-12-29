@@ -344,20 +344,38 @@ module rj45_modules_placeholder() {
 
 // Module for a single light pipe
 module light_pipe() {
+  // Shaft dimensions
+  top_size = led_hole_size + light_pipe_taper;
+  bottom_size = led_hole_size - 0.2;
+
   union() {
-    // Flange that sits on lid surface
-    translate([0, 0, -light_pipe_flange_thickness])
+    // Flange that sits on lid surface - extends beyond shaft on 3 sides only (one edge flush)
+    // Offset so one edge is flush with shaft for printability (aligned with bottom_size)
+    flange_offset = (light_pipe_flange_size - bottom_size) / 2;
+    translate([0, flange_offset, -light_pipe_flange_thickness])
       cube([light_pipe_flange_size, light_pipe_flange_size, light_pipe_flange_thickness], center=true);
 
-    // Tapered shaft that extends down to board
-    hull() {
-      // Top (at lid)
-      translate([0, 0, -light_pipe_flange_thickness])
-        cube([led_hole_size - 0.2, led_hole_size - 0.2, 0.1], center=true);
+    // Tapered shaft - flat on flush side (-Y), tapered on other 3 sides
 
-      // Bottom (at board) - slightly wider for taper
+    hull() {
+      // Top profile (at lid) - polygon with one flat edge
+      translate([0, 0, -light_pipe_flange_thickness])
+        linear_extrude(height=0.1)
+          polygon(
+            [
+              // Flush edge (stays vertical, no taper on -Y side)
+              [-top_size / 2, -bottom_size / 2],
+              [top_size / 2, -bottom_size / 2],
+              // Tapered edges
+              [top_size / 2, top_size / 2],
+              [-top_size / 2, top_size / 2],
+            ]
+          );
+
+      // Bottom profile (at board) - square
       translate([0, 0, -light_pipe_length])
-        cube([led_hole_size + light_pipe_taper, led_hole_size + light_pipe_taper, 0.1], center=true);
+        linear_extrude(height=0.1)
+          square([bottom_size, bottom_size], center=true);
     }
   }
 }
