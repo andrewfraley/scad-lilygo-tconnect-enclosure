@@ -54,7 +54,7 @@ mount_diameter = 6; // Diameter of post base
 
 /* [RJ45 Module Configuration] */
 rj45_module_count = 3; // Number of modules
-rj45_module_width = 35; // Internal width
+rj45_module_width = 34; // Internal width (reduced 1mm to close side gaps)
 rj45_module_length = 29; // Internal length
 ridge_thickness = 2; // Ridge thickness
 ridge_height = 5; // Ridge height
@@ -65,7 +65,7 @@ rj45_connector_height = 14; // Cutout height
 
 /* [RJ45 Pin Placement] */
 pin_from_wall = 5; // Distance from wall to first pin pair
-pin_from_ridge_side = 3.5; // Distance from side ridges
+pin_from_ridge_side = 3; // Distance from side ridges
 pin_pair_spacing = 11.5; // Distance between pin pairs
 
 /* [Button Holes] */
