@@ -151,9 +151,9 @@ module rj45_row_inverted(base_x, base_y) {
       cube([ridge_thickness, rj45_module_length, ridge_height]);
   }
 
-  // Create two horizontal ridges parallel to the wall (front and back of modules)
-  translate([base_x, base_y, -ridge_height])
-    cube([rj45_row_length, ridge_thickness, ridge_height]);
+  // Create horizontal ridges parallel to the wall (front is 1mm and extended 1mm forward, back is full thickness)
+  translate([base_x, base_y - 1, -ridge_height])
+    cube([rj45_row_length, 1, ridge_height]);
   translate([base_x, base_y + rj45_module_length - ridge_thickness, -ridge_height])
     cube([rj45_row_length, ridge_thickness, ridge_height]);
 
@@ -348,11 +348,6 @@ module board_placeholder() {
       cube([board_length, board_width, 1.5]);
 }
 
-// RJ45 module placeholder boards - NO LONGER USED (modules in lid)
-module rj45_modules_placeholder() {
-  // Modules now mounted in lid - see lid module
-}
-
 // Module for a single light pipe
 module light_pipe() {
   // Shaft dimensions
@@ -433,10 +428,10 @@ module lid() {
     }
 
     // Row of 3 inverted RJ45 module mounts on opposite side from buttons (hanging down from lid)
-    // Center the row horizontally within the lid
+    // Center the row horizontally within the lid, pulled back 1mm from wall for clearance
     rj45_row_inverted(
       (outer_length - rj45_row_length) / 2,
-      wall_thickness + lip_clearance
+      wall_thickness + lip_clearance + 1
     );
 
     // Snap tabs at bottom of lip (one centered on each side)
