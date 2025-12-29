@@ -30,6 +30,11 @@ lid_thickness = 3; // Thickness of lid top
 lip_depth = 2; // How far the lip extends down
 lip_clearance = 0.2; // Clearance between lip and walls
 
+/* [Snap Tabs] */
+snap_tab_width = 15; // Width of each snap tab
+snap_tab_depth = 0.6; // How far tab extends inward (creates interference)
+snap_tab_height = 2; // Height of tab at bottom of lip
+
 /* [Board Mounting] */
 // Use heat inserts or pins
 use_heat_inserts = false;
@@ -427,6 +432,25 @@ module lid() {
       (outer_length - rj45_row_length) / 2,
       wall_thickness + lip_clearance
     );
+
+    // Snap tabs at bottom of lip (one centered on each side)
+    // These extend outward beyond the lip to catch on the enclosure wall edge
+
+    // Tab on short edge (power input side) - centered, extends toward wall
+    translate([outer_length / 2 - snap_tab_width / 2, wall_thickness + lip_clearance - snap_tab_depth, -lip_depth])
+      cube([snap_tab_width, snap_tab_depth, snap_tab_height]);
+
+    // Tab on short edge (opposite side) - centered, extends toward wall
+    translate([outer_length / 2 - snap_tab_width / 2, outer_width - wall_thickness - lip_clearance, -lip_depth])
+      cube([snap_tab_width, snap_tab_depth, snap_tab_height]);
+
+    // Tab on long edge (RJ45 side) - centered, extends toward wall
+    translate([wall_thickness + lip_clearance - snap_tab_depth, outer_width / 2 - snap_tab_width / 2, -lip_depth])
+      cube([snap_tab_depth, snap_tab_width, snap_tab_height]);
+
+    // Tab on long edge (button side) - centered, extends toward wall
+    translate([outer_length - wall_thickness - lip_clearance, outer_width / 2 - snap_tab_width / 2, -lip_depth])
+      cube([snap_tab_depth, snap_tab_width, snap_tab_height]);
   }
 }
 
