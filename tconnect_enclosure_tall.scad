@@ -151,10 +151,10 @@ module rj45_row_inverted(base_x, base_y) {
       cube([ridge_thickness, rj45_module_length, ridge_height]);
   }
 
-  // Create horizontal ridges parallel to the wall (front is 1mm and extended 1mm forward, back is full thickness)
+  // Create horizontal ridges parallel to the wall (front is 1mm and extended 1mm forward, back is full thickness moved back 1mm)
   translate([base_x, base_y - 1, -ridge_height])
     cube([rj45_row_length, 1, ridge_height]);
-  translate([base_x, base_y + rj45_module_length - ridge_thickness, -ridge_height])
+  translate([base_x, base_y + rj45_module_length - ridge_thickness + 1, -ridge_height])
     cube([rj45_row_length, ridge_thickness, ridge_height]);
 
   // Create pins for each module
