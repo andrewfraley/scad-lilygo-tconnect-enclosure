@@ -75,10 +75,10 @@ button1_from_power_side = 24; // Button 1 position
 button2_from_power_side = 31; // Button 2 position
 
 /* [LED Viewing Holes] */
-led_hole_size = 3; // Size of square holes
-led_first_from_power_side = 10; // First LED position
-led_spacing = 4; // Spacing between LEDs
-led_from_bottom_edge = 9; // Distance from edge
+led_hole_size = 2; // Size of square holes (2mm APA102 LEDs)
+led_first_from_power_side = 8; // First LED edge position from power side (center at 9mm)
+led_spacing = 3; // Center-to-center spacing between LEDs
+led_from_bottom_edge = 2.5; // Distance from edge to LED center (1mm edge + 1mm LED center)
 
 /* [Light Pipe Parameters] */
 light_pipe_length = 34; // Length from bottom of flange to LED tops (44 - 1 - 11 = 32, +2mm for insertion)
