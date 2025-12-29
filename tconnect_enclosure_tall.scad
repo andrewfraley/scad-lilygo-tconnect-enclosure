@@ -7,6 +7,8 @@
 render_part = "enclosure"; // [enclosure:Enclosure, lid:Lid, light_pipes:Light Pipes]
 // Show lid in preview when rendering enclosure
 show_lid = false;
+// Show lid flush (true) or offset above (false)
+lid_flush = false;
 // Show light pipes in preview
 show_light_pipes = false;
 
@@ -16,7 +18,7 @@ board_length = 94;
 board_height = 13; // Total height with components above board
 board_thickness = 4; // PCB thickness including underside protrusions
 board_clearance = 1; // Clearance in width direction
-terminal_block_clearance = 12; // Clearance on length ends
+terminal_block_clearance = 25; // Clearance on length ends
 
 /* [Enclosure Parameters] */
 wall_thickness = 3;
@@ -42,7 +44,7 @@ pin_height = 5;
 insert_outer_diameter = 4; // Widest diameter
 insert_inner_diameter = 3.4; // Thinnest diameter
 insert_height = 4;
-mount_height = 4.5; // Height of post
+mount_height = 5; // Height of post (matches pin height)
 mount_diameter = 6; // Diameter of post base
 
 /* [RJ45 Module Configuration] */
@@ -63,7 +65,7 @@ pin_pair_spacing = 11.5; // Distance between pin pairs
 
 /* [Button Holes] */
 button_diameter = 3;
-button_height = 3; // Height from floor
+button_height = mount_height + 2.5; // Height from floor
 button1_from_power_side = 24; // Button 1 position
 button2_from_power_side = 31; // Button 2 position
 
@@ -74,7 +76,7 @@ led_spacing = 4; // Spacing between LEDs
 led_from_bottom_edge = 9; // Distance from edge
 
 /* [Light Pipe Parameters] */
-light_pipe_length = 37; // Length from lid to board
+light_pipe_length = 34; // Length from bottom of flange to LED tops (44 - 1 - 11 = 32, +2mm for insertion)
 light_pipe_flange_size = 5; // Flange size on lid
 light_pipe_flange_thickness = 1; // Flange thickness
 light_pipe_taper = 0.1; // Taper for insertion (mm/side)
@@ -85,8 +87,8 @@ side_hole_from_led_edge = 8; // Position from edge
 side_hole_height = 8; // Height from floor
 
 /* [Wall Mounting Holes] */
-mounting_hole_diameter = 4;
-mounting_hole_inset = 8; // Distance from corners
+mounting_hole_diameter = 5;
+mounting_hole_inset = 10; // Distance from corners
 
 /* [Hidden] */
 // Calculated RJ45 dimensions
@@ -123,6 +125,11 @@ module heat_insert_mount() {
     translate([0, 0, -0.1])
       cylinder(d=insert_outer_diameter - 0.2, h=mount_height + 0.2, $fn=30);
   }
+}
+
+// Module to create a solid standoff (for pin mounting)
+module solid_standoff() {
+  cylinder(d=mount_diameter, h=mount_height, $fn=30);
 }
 
 // Module for a row of 4 RJ45 modules with shared ridges (inverted for lid)
@@ -252,89 +259,73 @@ module enclosure_shell() {
           cylinder(d=side_hole_diameter, h=wall_thickness + 2, $fn=20);
     }
 
-    // Main board mounting (4 corners) - pins or heat insert mounts
-    if (use_heat_inserts) {
-      // Heat insert mounts
-      // Bottom-left corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_pin_inset,
-          wall_thickness + board_clearance + board_pin_inset,
-          wall_thickness,
-        ]
-      )
+    // Main board mounting (4 corners) - standoffs always present
+    // Bottom-left corner
+    translate(
+      [
+        wall_thickness + terminal_block_clearance + board_pin_inset,
+        wall_thickness + board_clearance + board_pin_inset,
+        wall_thickness,
+      ]
+    ) {
+      if (use_heat_inserts) {
         heat_insert_mount();
+      } else {
+        solid_standoff();
+        translate([0, 0, mount_height])
+          rounded_pin(pin_diameter, pin_height);
+      }
+    }
 
-      // Bottom-right corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
-          wall_thickness + board_clearance + board_pin_inset,
-          wall_thickness,
-        ]
-      )
+    // Bottom-right corner
+    translate(
+      [
+        wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
+        wall_thickness + board_clearance + board_pin_inset,
+        wall_thickness,
+      ]
+    ) {
+      if (use_heat_inserts) {
         heat_insert_mount();
+      } else {
+        solid_standoff();
+        translate([0, 0, mount_height])
+          rounded_pin(pin_diameter, pin_height);
+      }
+    }
 
-      // Top-left corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_pin_inset,
-          wall_thickness + board_clearance + board_width - board_pin_inset,
-          wall_thickness,
-        ]
-      )
+    // Top-left corner
+    translate(
+      [
+        wall_thickness + terminal_block_clearance + board_pin_inset,
+        wall_thickness + board_clearance + board_width - board_pin_inset,
+        wall_thickness,
+      ]
+    ) {
+      if (use_heat_inserts) {
         heat_insert_mount();
+      } else {
+        solid_standoff();
+        translate([0, 0, mount_height])
+          rounded_pin(pin_diameter, pin_height);
+      }
+    }
 
-      // Top-right corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
-          wall_thickness + board_clearance + board_width - board_pin_inset,
-          wall_thickness,
-        ]
-      )
+    // Top-right corner
+    translate(
+      [
+        wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
+        wall_thickness + board_clearance + board_width - board_pin_inset,
+        wall_thickness,
+      ]
+    ) {
+      if (use_heat_inserts) {
         heat_insert_mount();
-    } else {
-      // Mounting pins with rounded tops
-      // Bottom-left corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_pin_inset,
-          wall_thickness + board_clearance + board_pin_inset,
-          wall_thickness,
-        ]
-      )
-        rounded_pin(pin_diameter, pin_height);
-
-      // Bottom-right corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
-          wall_thickness + board_clearance + board_pin_inset,
-          wall_thickness,
-        ]
-      )
-        rounded_pin(pin_diameter, pin_height);
-
-      // Top-left corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_pin_inset,
-          wall_thickness + board_clearance + board_width - board_pin_inset,
-          wall_thickness,
-        ]
-      )
-        rounded_pin(pin_diameter, pin_height);
-
-      // Top-right corner
-      translate(
-        [
-          wall_thickness + terminal_block_clearance + board_length - board_pin_inset,
-          wall_thickness + board_clearance + board_width - board_pin_inset,
-          wall_thickness,
-        ]
-      )
-        rounded_pin(pin_diameter, pin_height);
+      } else {
+        solid_standoff();
+        translate([0, 0, mount_height])
+          rounded_pin(pin_diameter, pin_height);
+      }
     }
   }
 }
@@ -342,8 +333,8 @@ module enclosure_shell() {
 // Board placeholder module
 module board_placeholder() {
   color("green", 0.7)
-    translate([wall_thickness + terminal_block_clearance, wall_thickness + board_clearance, wall_thickness])
-      cube([board_length, board_width, board_thickness]);
+    translate([wall_thickness + terminal_block_clearance, wall_thickness + board_clearance, wall_thickness + mount_height])
+      cube([board_length, board_width, 1.5]);
 }
 
 // RJ45 module placeholder boards - NO LONGER USED (modules in lid)
@@ -378,7 +369,7 @@ module light_pipes() {
       [
         wall_thickness + terminal_block_clearance + led_first_from_power_side + (i * led_spacing) + led_hole_size / 2,
         wall_thickness + board_clearance + board_width - led_from_bottom_edge + led_hole_size / 2,
-        wall_height,
+        wall_height + lid_thickness + light_pipe_flange_thickness,
       ]
     )
       light_pipe();
@@ -439,11 +430,12 @@ if (render_part == "enclosure") {
 
 // Show the lid above enclosure if enabled
 if (show_lid && render_part == "enclosure") {
-  translate([0, 0, wall_height + 5])
+  translate([0, 0, lid_flush ? wall_height : wall_height + 5])
     %lid();
 }
 
 // Show light pipes if enabled
 if (show_light_pipes && render_part == "enclosure") {
-  %light_pipes();
+  translate([0, 0, lid_flush ? 0 : 5])
+    %light_pipes();
 }
