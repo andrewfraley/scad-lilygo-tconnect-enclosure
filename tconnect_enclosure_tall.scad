@@ -31,7 +31,7 @@ lip_depth = 2; // How far the lip extends down
 lip_clearance = 0.2; // Clearance between lip and walls
 
 /* [Snap Tabs] */
-snap_tab_width = 15; // Width of each snap tab
+snap_tab_width = 25; // Width of each snap tab
 snap_tab_depth = 0.7; // How far tab extends inward (creates interference)
 snap_tab_height = 2; // Height of tab at bottom of lip
 
@@ -54,7 +54,7 @@ mount_diameter = 6; // Diameter of post base
 
 /* [RJ45 Module Configuration] */
 rj45_module_count = 3; // Number of modules
-rj45_module_width = 34; // Internal width (reduced 1mm to close side gaps)
+rj45_module_width = 34.5; // Internal width (reduced 1mm to close side gaps)
 rj45_module_length = 29; // Internal length
 ridge_thickness = 2; // Ridge thickness
 ridge_height = 5; // Ridge height
@@ -65,7 +65,7 @@ rj45_connector_height = 14; // Cutout height
 
 /* [RJ45 Pin Placement] */
 pin_from_wall = 5; // Distance from wall to first pin pair
-pin_from_ridge_side = 3; // Distance from side ridges
+pin_from_ridge_side = 3.25; // Distance from side ridges
 pin_pair_spacing = 11.5; // Distance between pin pairs
 
 /* [Button Holes] */
@@ -415,14 +415,15 @@ module lid() {
 
       // Single rectangular LED viewing hole for all 4 light pipes
       // LEDs are on the same side as the buttons (button side)
+      // Made slightly wider for easier insertion
       translate(
         [
-          wall_thickness + terminal_block_clearance + led_first_from_power_side,
+          wall_thickness + terminal_block_clearance + led_first_from_power_side - 0.5,
           wall_thickness + board_clearance + board_width - led_from_bottom_edge - led_hole_size / 2,
           -lip_depth - 1,
         ]
       )
-        cube([led_hole_size + (3 * led_spacing), led_hole_size, lid_thickness + lip_depth + 2]);
+        cube([led_hole_size + (3 * led_spacing) + 1, led_hole_size, lid_thickness + lip_depth + 2]);
     }
 
     // Row of 3 inverted RJ45 module mounts on opposite side from buttons (hanging down from lid)
