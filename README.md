@@ -29,6 +29,7 @@
 ## Short Version
 
 ![Short Enclosure](img/tconnect_enclosure_short.png)
+![Short Enclosure](img/short_inside.webp)
 
 Simple open shell design with RJ45 modules mounted on the bottom.
 
@@ -58,6 +59,8 @@ Edit parameters directly in the SCAD file:
 
 ![Tall Enclosure](img/tconnect_enclosure_tall.png)
 ![Tall Enclosure](img/tconnect_enclosure_tall-lid.png)
+![Tall Enclosure](img/tall_inside.jpeg)
+![Tall Enclosure](img/tall_ports.jpeg)
 
 Compact design with RJ45 modules mounted inverted in the lid.
 
