@@ -3,7 +3,18 @@
 3D printable enclosure for the LillyGo T-Connect ESP32 board.
 
 **LilyGo T-connect:** https://amzn.to/3Laaei9
+
 **RJ45 Modules:** https://amzn.to/49rEJbe
+
+**Dupont jumper wires** https://amzn.to/4pwAtx6 (use male to female jumpers to connect between the T-Connect terminal blocks and the rj45 modules)
+
+**Dupont / JST crimping kit** https://amzn.to/4aNlICu (use JST-XH if you need to use the T-Connect header pins, they're too short for dupont)
+
+**Power input connectors** https://amzn.to/49AZXn7 (if using the 12V input instead of USB)
+
+**Inline fuse holders** https://amzn.to/4sBli8F (You probably want to use a 1A fuse if using the 12V input)
+
+**Victron 48V -> 12V converter** https://amzn.to/4aPAysb (To power the t-connect directly from your battery)
 
 ## Getting Started
 
