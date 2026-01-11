@@ -92,6 +92,12 @@ power_hole_diameter = 7; // Diameter (for Cat6)
 power_hole_from_led_edge = 8; // Position from edge
 power_hole_height = 8; // Height from floor
 
+/* [Antenna Hole] */
+enable_antenna_hole = false; // [true,false] Enable/disable antenna hole
+antenna_hole_diameter = 7; // Diameter
+antenna_hole_height = 8; // Height from floor
+antenna_hole_from_power_side = 12.5; // Distance from power side wall inner edge
+
 /* [Wall Mounting Holes] */
 enable_mounting_holes = true; // [true,false] Enable/disable wall mounting holes
 mounting_hole_diameter = 5;
@@ -236,6 +242,19 @@ module enclosure_shell() {
       )
         rotate([90, 0, 0])
           cylinder(d=button_diameter, h=wall_thickness + 2, $fn=20);
+
+      // Antenna hole on button side wall (long edge), towards power hole wall - optional
+      if (enable_antenna_hole) {
+        translate(
+          [
+            wall_thickness + antenna_hole_from_power_side,
+            outer_width + 1,
+            wall_thickness + antenna_hole_height,
+          ]
+        )
+          rotate([90, 0, 0])
+            cylinder(d=antenna_hole_diameter, h=wall_thickness + 2, $fn=20);
+      }
 
       // Mounting holes in bottom (near corners for wall mounting) - optional
       if (enable_mounting_holes) {
